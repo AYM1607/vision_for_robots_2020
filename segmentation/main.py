@@ -104,8 +104,6 @@ def region_expander(image, intensity_threshold):
     width = len(image[0])
 
     # Generate a visited list with the same dimensions as the original image.
-    # The tuple on each field represents if the pixel was already visited and,
-    # If it is part of the region that's being explored.
     visited = np.full((height, width), False)
 
     # Create resulting image (BGR) with all black colors.
