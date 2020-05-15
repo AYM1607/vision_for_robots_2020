@@ -1,3 +1,8 @@
+"""
+This program segments an image usign the region growing algorithm
+with manually provided seeds.
+"""
+
 import argparse
 from random import randint
 import numpy as np
