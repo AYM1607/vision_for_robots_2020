@@ -2,13 +2,18 @@
 This program segments an image usign the region growing algorithm
 with manually provided seeds.
 """
-
+import time
+import math
 import argparse
 from random import randint
 import numpy as np
 import cv2
 
-seed_coordinates_list = []
+from video_feed import VideoFeed
+
+# Seed colors. Arranged in BGR order to match opencv.
+COLOR_1 = [115, 80, 155]
+COLOR_2 = [0, 95, 165]
 
 
 def mouse_callback(event, x_coordinate, y_coordinate, _flags, _params):
@@ -91,7 +96,53 @@ def update_moments(moments_object, point):
     moments_object["02"] += y_coordinate * y_coordinate
 
 
-def region_expander(image, intensity_threshold):
+def get_region_characteristics(moments):
+    """
+    Calculate the characteristics of a region given its moments.
+
+    Arguments:
+        moments {dictionary} -- Contains all the ordinary moments.
+
+    Returns:
+        Dictionary -- Contains:
+            x_center: x coordinate of the centroid.
+            y_center: y coordinate of the controid.
+            theta: The orientation of the region.
+            phi_1: First Hu moment.
+            phi_2: Second Hu moment.
+    """
+
+    # Location of the region.
+    x_center = int(moments["10"] / moments["00"])
+    y_center = int(moments["01"] / moments["00"])
+
+    # Centralized moments.
+    mu_11 = moments["11"] - y_center * moments["10"]
+    mu_20 = moments["20"] - x_center * moments["10"]
+    mu_02 = moments["02"] - y_center * moments["01"]
+
+    # Orientation.
+    theta = math.atan2(2 * mu_11, mu_20 - mu_02) / 2
+
+    # Normalized moments.
+    nu_11 = mu_11 / moments["00"] ** 2
+    nu_20 = mu_20 / moments["00"] ** 2
+    nu_02 = mu_02 / moments["00"] ** 2
+
+    # Hu moments.
+    phi_1 = nu_20 + nu_02
+    phi_2 = (nu_20 - nu_02) ** 2 - 4 * nu_11 ** 2
+
+    return {
+        "x_center": x_center,
+        "y_center": y_center,
+        "theta": theta,
+        "phi_1": phi_1,
+        "phi_2": phi_2,
+    }
+
+
+def region_expander(image, seed_coordinates_list, intensity_threshold):
     """
     Expands regions given a grayscale image, a threshold and a list of seeds.
 
@@ -138,15 +189,106 @@ def region_expander(image, intensity_threshold):
                 if distance <= intensity_threshold:
                     pending_points.append(neighbour)
 
-        print("Moments: ")
-        print(region_moments)
+        region_characteristics = get_region_characteristics(region_moments)
+        print(region_characteristics)
 
-        x_center = int(region_moments["10"] / region_moments["00"])
-        y_center = int(region_moments["01"] / region_moments["00"])
-
-        cv2.circle(result_image, (x_center, y_center), 3, (0, 255, 0), 6)
+        cv2.circle(
+            result_image,
+            (region_characteristics["x_center"], region_characteristics["y_center"]),
+            3,
+            (0, 255, 0),
+            6,
+        )
 
     return result_image
+
+
+def get_seeds_helper(
+    image, lower_height_limit, upper_height_limit, data, count_to_update
+):
+    """
+    Get the possible seeds of an image based on the 2 colors defined on the global scope.
+    The name of the colors must be COLOR_1 and COLOR_2 and be in BGR order.
+    Analyzes the row in the middle of lower_height_limit and upper_height_limit and
+    recursively calls the same function for the images that the middle cuts in half.
+    In order to keep the algorithm fast, it stops at 20 iterations and considers there's no
+    seeds in this image, it also starts when the 2 seeds are found.
+
+    Arguments:
+        image {np.array} -- The image to traverse
+        lower_height_limit {integer}
+        upper_height_limit {integer}
+        data {dictionary} -- Pre-existing data, can contain:
+            seed_1: The coordiantes for the seed_1
+            seed_2: The coordiantes for seed_2
+            count: The total iterations counts
+
+    Returns:
+        Dictionary -- The updated data dictionary
+    """
+
+    if ("seed_1" in data and "seed_2" in data) or data[count_to_update] == 10:
+        return None
+
+    middle_height = int(
+        lower_height_limit + (upper_height_limit - lower_height_limit) / 2
+    )
+
+    for x in range(0, len(image[0])):
+        pixel = image[middle_height][x]
+        if (
+            COLOR_1[0] - 20 <= pixel[0] <= COLOR_1[0] + 20
+            and COLOR_1[1] - 20 <= pixel[1] <= COLOR_1[1] + 20
+            and COLOR_1[2] - 20 <= pixel[2] <= COLOR_1[2] + 20
+        ):
+            data["seed_1"] = (x, middle_height)
+
+        if (
+            COLOR_2[0] - 20 <= pixel[0] <= COLOR_2[0] + 20
+            and COLOR_2[1] - 20 <= pixel[1] <= COLOR_2[1] + 20
+            and COLOR_2[2] - 20 <= pixel[2] <= COLOR_2[2] + 20
+        ):
+            data["seed_2"] = (x, middle_height)
+
+    data[count_to_update] += 1
+
+    get_seeds_helper(image, lower_height_limit, middle_height, data, count_to_update)
+    get_seeds_helper(image, middle_height, upper_height_limit, data, count_to_update)
+
+
+def get_seeds(image):
+    """
+    Gets the seeds of an image.
+    For this method to work COLOR_1 and COLOR_2 must be in scope.
+
+    Arguments:
+        image {np.array} -- The image to traverse.
+    """
+
+    data = {"upper_count": 0, "lower_count": 0}
+
+    middle_height = int(len(image) / 2)
+
+    for x in range(0, len(image[0])):
+        pixel = image[middle_height][x]
+        if (
+            COLOR_1[0] - 20 <= pixel[0] <= COLOR_1[0] + 20
+            and COLOR_1[1] - 20 <= pixel[1] <= COLOR_1[1] + 20
+            and COLOR_1[2] - 20 <= pixel[2] <= COLOR_1[2] + 20
+        ):
+            data["seed_1"] = (x, middle_height)
+
+        if (
+            COLOR_2[0] - 20 <= pixel[0] <= COLOR_2[0] + 20
+            and COLOR_2[1] - 20 <= pixel[1] <= COLOR_2[1] + 20
+            and COLOR_2[2] - 20 <= pixel[2] <= COLOR_2[2] + 20
+        ):
+            data["seed_2"] = (x, middle_height)
+
+    get_seeds_helper(image, 0, middle_height, data, "lower_count")
+    get_seeds_helper(image, middle_height, len(image), data, "upper_count")
+
+    return data
 
 
 def main():
@@ -156,12 +298,6 @@ def main():
     """
 
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-f",
-        "--filename",
-        required=True,
-        help="The name of the image file to be processed",
-    )
     parser.add_argument(
         "-i",
         "--intensity-threshold",
@@ -177,28 +313,32 @@ def main():
     # Set the mouse callback to get seeds from clicks.
     cv2.setMouseCallback("Input", mouse_callback, 0)
 
-    # Read image input.
-    image = cv2.imread(args.filename, cv2.IMREAD_COLOR)
-    image = cv2.resize(image, (500, 500))
+    with VideoFeed(camera_index=1, width=350) as feed:
+        while True:
+            start = time.time()
+            _, image = feed.read()
+            gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            seeds_data = get_seeds(image)
+            seed_coordinates_list = []
 
-    # Transform the original image to grayscale.
-    image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            if "seed_1" in seeds_data:
+                seed_coordinates_list.append(seeds_data["seed_1"])
+            if "seed_2" in seeds_data:
+                seed_coordinates_list.append(seeds_data["seed_2"])
 
-    cv2.imshow("Input", image)
-    print(
-        "Click on the input image to specify seeds. Each click is an independent seed."
-    )
+            result_image = region_expander(
+                gray_image, seed_coordinates_list, int(args.intensity_threshold)
+            )
+            cv2.imshow("Input", image)
+            cv2.imshow("Output", result_image)
+            end = time.time()
+            print(f"Frame processing took: {end - start} seconds")
 
-    # Wait for the user to click.
-    cv2.waitKey()
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
 
-    print("Starting algorithm")
-    cv2.imshow(
-        "Output", region_expander(image_gray, args.intensity_threshold),
-    )
-
-    cv2.waitKey()
     cv2.destroyAllWindows()
+    return
 
 
 if __name__ == "__main__":
