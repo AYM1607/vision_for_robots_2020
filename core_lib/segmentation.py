@@ -1,16 +1,5 @@
-"""
-This program segments an image usign the region growing algorithm
-with manually provided seeds.
-"""
-import time
 import math
-import argparse
-from random import randint
 import numpy as np
-import cv2
-
-from video_feed import VideoFeed
-from seeds import get_seeds
 
 
 def get_neighbours(point, image, visited):
@@ -134,31 +123,6 @@ def get_region_characteristics(region_data):
     }
 
 
-def draw_region_characteristics(image, characteristics):
-    """
-    Draws the centorid and the orientation of a region given
-    its characteristics.
-    """
-
-    center = characteristics["x_center"], characteristics["y_center"]
-
-    # Draw the centroid.
-    cv2.circle(image, center, 2, (0, 255, 0), 4)
-
-    theta = characteristics["theta"]
-
-    # Get the coordinates for the 2 ends of the line.
-    hyp = (characteristics["height"] / 2) / math.sin(theta)
-    x_1 = int(characteristics["x_center"] + (hyp * math.cos(theta)))
-    y_1 = int(characteristics["y_center"] + characteristics["height"] / 2)
-    # Mirror the angle to get the opposite coordinate.
-    theta = theta + math.pi if theta < 0 else theta - math.pi
-    x_2 = int(characteristics["x_center"] + (hyp * math.cos(theta)))
-    y_2 = int(characteristics["y_center"] - characteristics["height"] / 2)
-
-    cv2.line(image, (x_1, y_1), (x_2, y_2), (0, 255, 0), 2)
-
-
 def region_expander(image, seed_coordinates_list, intensity_threshold):
     """
     Expands regions given a grayscale image, a threshold and a list of seeds.
@@ -169,22 +133,27 @@ def region_expander(image, seed_coordinates_list, intensity_threshold):
             and any neighbour pixel.
 
     Returns:
-        np.array -- An image with the found regions marked in random colors and
-            the centroids of those images in bright green.
+        Tuple -- Contains:
+            result_image: An image with the found regions marked with white.
+            found_regions: An array of dictionaries containing the characteristics
+                of the fount regions.
+
     """
 
     height = len(image)
     width = len(image[0])
+    region_color = (255, 255, 255)
 
     # Generate a visited list with the same dimensions as the original image.
     visited = np.full((height, width), False)
 
-    # Create resulting image (BGR) with all black colors.
+    # Generate a blank image to draw the points on.
     result_image = np.zeros((height, width, 3), np.uint8)
+
+    found_regions = []
 
     for seed_coordinates in seed_coordinates_list:
         pending_points = []
-        region_color = (255, 255, 255)
         region_data = {}
 
         x_seed, y_seed = seed_coordinates
@@ -196,9 +165,8 @@ def region_expander(image, seed_coordinates_list, intensity_threshold):
             current_point = pending_points.pop(0)
             current_x, current_y, _ = current_point
 
-            update_region_data(region_data, current_point)
-
             result_image[current_y][current_x] = region_color
+            update_region_data(region_data, current_point)
 
             for neighbour in get_neighbours(current_point, image, visited):
                 intensity = neighbour[2]
@@ -210,54 +178,6 @@ def region_expander(image, seed_coordinates_list, intensity_threshold):
         if region_data["00"] < 100:
             continue
 
-        region_characteristics = get_region_characteristics(region_data)
-        print(region_characteristics)
-        draw_region_characteristics(result_image, region_characteristics)
+        found_regions.append(get_region_characteristics(region_data))
 
-    return result_image
-
-
-def main():
-    """
-    Performs the seeded region growing algorithm for image segmentation.
-    Reads images directlty from the webcam.
-    """
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-i",
-        "--intensity-threshold",
-        default=10,
-        help="The maximum distance for 2 pixels to be considered in the same region",
-    )
-    args = parser.parse_args()
-
-    # Create 2 named windows for the input and output image.
-    cv2.namedWindow("Input")
-    cv2.namedWindow("Output")
-
-    with VideoFeed(camera_index=1, width=450) as feed:
-        while True:
-            start = time.time()
-            _, image = feed.read()
-            gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            seeds = get_seeds(image)
-
-            result_image = region_expander(
-                gray_image, seeds, int(args.intensity_threshold)
-            )
-            cv2.imshow("Input", image)
-            cv2.imshow("Output", result_image)
-            end = time.time()
-            print(f"Frame processing took: {end - start} seconds")
-
-            # End the loop when "q" is pressed.
-            if cv2.waitKey(1) & 0xFF == ord("q"):
-                break
-
-    cv2.destroyAllWindows()
-    return
-
-
-if __name__ == "__main__":
-    main()
+    return result_image, found_regions
