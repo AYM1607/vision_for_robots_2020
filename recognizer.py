@@ -12,6 +12,7 @@ from core_lib.seeds import get_seeds
 from core_lib.segmentation import region_expander
 from core_lib.drawing import draw_region_characteristics
 from core_lib.drawing import draw_results_ui
+from core_lib.drawing import draw_training_space
 from core_lib.region_identifier import identify_region
 
 # object_names = {
@@ -22,14 +23,17 @@ from core_lib.region_identifier import identify_region
 #     "5": "UNKNOWN"
 # }
 
+
 def read_training_params():
-    with open('train_parameters.txt') as json_file:
+    with open("train_parameters.txt") as json_file:
         training_params = json.load(json_file)
     return training_params
+
 
 # def print_object_names(objects):
 #     for obj in objects:
 #         print("id = ", object_names[obj[0]], "\ttheta = ", obj[1], "\n")
+
 
 def main():
     """
@@ -63,6 +67,7 @@ def main():
             )
             detected_figures = identify_region(training_params, found_regions)
             draw_results_ui(detected_figures)
+            draw_training_space(training_params, found_regions)
             # print_object_names (detected_figures)
 
             for region in found_regions:
