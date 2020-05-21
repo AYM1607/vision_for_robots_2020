@@ -1,6 +1,6 @@
 # TODO: Read this from the configuration file.
 # Seed colors. Arranged in BGR order to match opencv.
-COLOR_1 = [0, 30, 160]
+COLOR_1 = [30, 45, 140]
 COLOR_2 = [150, 90, 40]
 
 

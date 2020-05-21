@@ -1,4 +1,5 @@
 import math
+import json
 from .core import Figure
 
 def identify_region(trainer_params, potential_objects):
@@ -15,21 +16,25 @@ def identify_region(trainer_params, potential_objects):
         distance = math.inf
         region = Figure.UNKNOWN
         angle = None
+        phi_1 = curr_obj["phi_1"]
+        phi_2 = curr_obj["phi_2"]
+        print("phi1 = ", phi_1, "\tphi2 = ", phi_2, "\n")
         for figure in trainer_params:
             sigma_phi_1 = figure["sigma_phi_1"]
             sigma_phi_2 = figure["sigma_phi_2"]
             mean_phi_1 = figure["mean_phi_1"]
             mean_phi_2 = figure["mean_phi_2"]
-            phi_1 = curr_obj["phi_1"]
-            phi_2 = curr_obj["phi_2"]
             # If the object is inside the precalculated region.
-            if in_range(sigma_phi_1 / 2, sigma_phi_2 / 2, mean_phi_1, mean_phi_2, phi_1, phi_2):
+            # if in_range(sigma_phi_1 / 2, sigma_phi_2 / 2, mean_phi_1, mean_phi_2, phi_1, phi_2):
                 # If the distance to that region is less than the others.
-                if  get_distance( sigma_phi_1, sigma_phi_2, mean_phi_1, mean_phi_2, phi_1, phi_2) < distance:
-                    region = figure["name"]
-                    # If it is an object of type long, update the angle
-                    if figure["name"] == Figure.LONG_1 or figure["name"] == Figure.LONG_2:
-                        angle = curr_obj["theta"]
+            ind_distance = get_distance(sigma_phi_1, sigma_phi_2, mean_phi_1, mean_phi_2, phi_1, phi_2)
+            print("object = ", figure["object_id"], "\tphi1 = ", mean_phi_1, "\tphi2 = ", mean_phi_2, "\tdist = ", ind_distance, "\n")
+            if  ind_distance < distance:
+                distance = ind_distance
+                region = figure["object_id"]
+                # If it is an object of type long, update the angle
+                if figure["object_id"] == Figure.LONG_1 or figure["object_id"] == Figure.LONG_2:
+                    angle = curr_obj["theta"]
         objects.append((region, angle))
     return objects
 
@@ -46,7 +51,8 @@ def get_distance(sigma_phi_1, sigma_phi_2, mean_phi_1, mean_phi_2, phi_1, phi_2)
     Returns:
         Float -- Distance between the center of the object and the center of the region.
     """
-    return ( ( phi_1 - mean_phi_1 ) / sigma_phi_1 )**2 + ( ( phi_2 - mean_phi_2 ) / sigma_phi_2 )**2 
+    # return ( ( phi_1 - mean_phi_1 ) / sigma_phi_1 )**2 + ( ( phi_2 - mean_phi_2 ) / sigma_phi_2 )**2 
+    return ( phi_1 - mean_phi_1 )**2 + ( phi_2 - mean_phi_2 )**2 
 
 def in_range(delta_phi_1, delta_phi_2, mean_phi_1, mean_phi_2, phi_1, center_phi_2):
     """
