@@ -2,6 +2,8 @@ import math
 import json
 from .core import Figure
 
+threshold = 0.1
+
 def identify_region(trainer_params, potential_objects):
     """
     Matches an object being detected in real time with a specific type of object previously defined.
@@ -14,7 +16,7 @@ def identify_region(trainer_params, potential_objects):
     objects = []
     for curr_obj in potential_objects:
         distance = math.inf
-        region = Figure.UNKNOWN
+        region = "5"
         angle = None
         phi_1 = curr_obj["phi_1"]
         phi_2 = curr_obj["phi_2"]
@@ -24,19 +26,32 @@ def identify_region(trainer_params, potential_objects):
             sigma_phi_2 = figure["sigma_phi_2"]
             mean_phi_1 = figure["mean_phi_1"]
             mean_phi_2 = figure["mean_phi_2"]
-            # If the object is inside the precalculated region.
-            # if in_range(sigma_phi_1 / 2, sigma_phi_2 / 2, mean_phi_1, mean_phi_2, phi_1, phi_2):
-                # If the distance to that region is less than the others.
             ind_distance = get_distance(sigma_phi_1, sigma_phi_2, mean_phi_1, mean_phi_2, phi_1, phi_2)
-            print("object = ", figure["object_id"], "\tphi1 = ", mean_phi_1, "\tphi2 = ", mean_phi_2, "\tdist = ", ind_distance, "\n")
-            if  ind_distance < distance:
+            print("object = ", figure["object_id"], "\tphi1 = ", mean_phi_1, "\tphi2 = ", mean_phi_2, "\tsigma_phi1 = ", sigma_phi_1, "\tsigma_phi2 = ", sigma_phi_2, "\tdist = ", ind_distance, "\n")
+            if  in_range(mean_phi_1, mean_phi_2, phi_1, phi_2) and ind_distance < distance:
                 distance = ind_distance
                 region = figure["object_id"]
                 # If it is an object of type long, update the angle
-                if figure["object_id"] == Figure.LONG_1 or figure["object_id"] == Figure.LONG_2:
+                if region == Figure.LONG_1.name or region == Figure.LONG_2.name:
                     angle = curr_obj["theta"]
+                else:
+                    angle = None
         objects.append((region, angle))
     return objects
+
+def in_range(mean_phi_1, mean_phi_2, phi_1, phi_2):
+    """
+    Determines if the object is inside a specific region in phi_1 and phi_2 axis.
+    Arguments:
+        mean_phi_1 {float} - Mean or center of the region in phi_1 axis.
+        mean_phi_2 {float} - Mean or center of the region in phi_2 axis.
+        phi_1 {float} - Center of the object in phi_1 axis.
+        phi_2 {float} - Center of the object in phi_2 axis.
+    Returns:
+        Boolean -- True = the object falls inside the region. False = the objet is out the region.
+    """
+    return mean_phi_1 - threshold <= phi_1 <= mean_phi_1 + threshold and mean_phi_2 - threshold <= phi_2 <= mean_phi_2 + threshold
+
 
 def get_distance(sigma_phi_1, sigma_phi_2, mean_phi_1, mean_phi_2, phi_1, phi_2):
     """
@@ -51,20 +66,5 @@ def get_distance(sigma_phi_1, sigma_phi_2, mean_phi_1, mean_phi_2, phi_1, phi_2)
     Returns:
         Float -- Distance between the center of the object and the center of the region.
     """
-    # return ( ( phi_1 - mean_phi_1 ) / sigma_phi_1 )**2 + ( ( phi_2 - mean_phi_2 ) / sigma_phi_2 )**2 
-    return ( phi_1 - mean_phi_1 )**2 + ( phi_2 - mean_phi_2 )**2 
-
-def in_range(delta_phi_1, delta_phi_2, mean_phi_1, mean_phi_2, phi_1, center_phi_2):
-    """
-    Determines if the object is inside a specific region in phi_1 and phi_2 axis.
-    Arguments:
-        sigma_phi_1 {float} - Standard deviation in phi_1 axis.
-        sigma_phi_2 {float} - Standard deviation in phi_2 axis.
-        mean_phi_1 {float} - Mean or center of the region in phi_1 axis.
-        mean_phi_2 {float} - Mean or center of the region in phi_2 axis.
-        phi_1 {float} - Center of the object in phi_1 axis.
-        phi_2 {float} - Center of the object in phi_2 axis.
-    Returns:
-        Boolean -- True = the object falls inside the region. False = the objet is out the region.
-    """
-    return mean_phi_1 - delta_phi_1 <= phi_1 <= mean_phi_1 + delta_phi_1 and mean_phi_2 - delta_phi_2 <= center_phi_2 <= mean_phi_2 + delta_phi_2
+    return ( ( phi_1 - mean_phi_1 ) / sigma_phi_1 )**2 + ( ( phi_2 - mean_phi_2 ) / sigma_phi_2 )**2 
+    # return ( phi_1 - mean_phi_1 )**2 + ( phi_2 - mean_phi_2 )**2 

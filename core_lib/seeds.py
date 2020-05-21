@@ -1,7 +1,7 @@
 # TODO: Read this from the configuration file.
 # Seed colors. Arranged in BGR order to match opencv.
 COLOR_1 = [30, 45, 140]
-COLOR_2 = [150, 90, 40]
+COLOR_2 = [110, 60, 25]
 
 
 def get_seeds_helper(

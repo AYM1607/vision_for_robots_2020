@@ -5,6 +5,7 @@ with automatically found seeds.
 import argparse
 import cv2
 import json
+import statistics
 
 from core_lib.video_feed import VideoFeed
 from core_lib.seeds import get_seeds
@@ -19,12 +20,6 @@ object_names = {
     "4": "cinta",
     "5": "UNKNOWN"
 }
-
-color_image = 0
-
-# def mouse_callback(event, x_coordinate, y_coordinate, _flags, _params):
-#     if event == cv2.EVENT_LBUTTONDOWN:
-#         print(color_image[y_coordinate][x_coordinate][0], color_image[y_coordinate][x_coordinate][1], color_image[y_coordinate][x_coordinate][2])
 
 def read_training_params():
     with open('train_parameters.txt') as json_file:
@@ -54,15 +49,11 @@ def main():
     cv2.namedWindow("Input")
     cv2.namedWindow("Output")
 
-    # cv2.setMouseCallback("Input", mouse_callback, 0)
-
     training_params = read_training_params()
 
     with VideoFeed(camera_index=0, width=450) as feed:
         while True:
             _, image = feed.read()
-            # global color_image
-            # color_image = image
             gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             seeds = get_seeds(image)
 
@@ -71,7 +62,6 @@ def main():
             )
 
             print_object_names (identify_region(training_params, found_regions))
-
 
             for region in found_regions:
                 draw_region_characteristics(result_image, region)
