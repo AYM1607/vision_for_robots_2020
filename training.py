@@ -5,6 +5,7 @@ import argparse
 import cv2
 import json
 import statistics
+import numpy as np
 
 from core_lib.video_feed import VideoFeed
 from core_lib.seeds import get_seeds
@@ -13,9 +14,13 @@ from core_lib.drawing import draw_region_characteristics
 
 seed = (0,0)
 points = []
+intensity_threshold = 0
+color_image = 0
 
 def mouse_callback(event, x_coordinate, y_coordinate, _flags, _params):
     global seed
+    global color_image
+    global intensity_threshold
     """
     Adds the coordinates of a given mouse click event to the
     global coordinates list.
@@ -24,6 +29,10 @@ def mouse_callback(event, x_coordinate, y_coordinate, _flags, _params):
     if event == cv2.EVENT_LBUTTONDOWN:
         print(f"Mouse positioned in {x_coordinate},{y_coordinate}")
         seed = (x_coordinate, y_coordinate)
+        gray_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
+        _, found_regions = region_expander(
+            gray_image, [seed], intensity_threshold
+        )
         print(found_regions)
         points.append(
             {
@@ -55,7 +64,7 @@ def main():
     Reads images directlty from the webcam.
     """
 
-    global found_regions, points
+    global points, color_image, intensity_threshold
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -80,29 +89,19 @@ def main():
 
     # Create 2 named windows for the input and output image.
     cv2.namedWindow("Input")
-    cv2.namedWindow("Output")
 
     cv2.setMouseCallback("Input", mouse_callback, 0)
 
     regions = []
+    intensity_threshold = int(args.intensity_threshold)
 
     for _ in range(int(args.objects)):
         object_id = input("Enter object id: ")
         with VideoFeed(camera_index=0, width=450) as feed:
             while True:
                 _, image = feed.read()
-                gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-                seed_coordinates_list = [seed]
-
-                result_image, found_regions = region_expander(
-                    gray_image, seed_coordinates_list, int(args.intensity_threshold)
-                )
-
-                for region in found_regions:
-                    draw_region_characteristics(result_image, region)
+                color_image = image
                 
-                cv2.imshow("Output", result_image)
                 cv2.imshow("Input", image)
 
                 # End the loop when "q" is pressed.

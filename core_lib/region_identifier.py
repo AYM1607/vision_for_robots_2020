@@ -2,7 +2,7 @@ import math
 import json
 from .core import Figure
 
-threshold = 0.1
+threshold = 0.7
 
 def identify_region(trainer_params, potential_objects):
     """
@@ -30,9 +30,9 @@ def identify_region(trainer_params, potential_objects):
             print("object = ", figure["object_id"], "\tphi1 = ", mean_phi_1, "\tphi2 = ", mean_phi_2, "\tsigma_phi1 = ", sigma_phi_1, "\tsigma_phi2 = ", sigma_phi_2, "\tdist = ", ind_distance, "\n")
             if  in_range(mean_phi_1, mean_phi_2, phi_1, phi_2) and ind_distance < distance:
                 distance = ind_distance
-                region = figure["object_id"]
+                region = Figure(int(figure["object_id"]))
                 # If it is an object of type long, update the angle
-                if region == Figure.LONG_1.name or region == Figure.LONG_2.name:
+                if region == Figure.LONG_1 or region == Figure.LONG_2:
                     angle = curr_obj["theta"]
                 else:
                     angle = None

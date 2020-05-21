@@ -11,24 +11,25 @@ from core_lib.video_feed import VideoFeed
 from core_lib.seeds import get_seeds
 from core_lib.segmentation import region_expander
 from core_lib.drawing import draw_region_characteristics
+from core_lib.drawing import draw_results_ui
 from core_lib.region_identifier import identify_region
 
-object_names = {
-    "1": "desarmador",
-    "2": "llave",
-    "3": "tuerca",
-    "4": "cinta",
-    "5": "UNKNOWN"
-}
+# object_names = {
+#     "1": "martillo",
+#     "2": "llave",
+#     "3": "tuerca",
+#     "4": "cinta",
+#     "5": "UNKNOWN"
+# }
 
 def read_training_params():
     with open('train_parameters.txt') as json_file:
         training_params = json.load(json_file)
     return training_params
 
-def print_object_names(objects):
-    for obj in objects:
-        print("id = ", object_names[obj[0]], "\ttheta = ", obj[1], "\n")
+# def print_object_names(objects):
+#     for obj in objects:
+#         print("id = ", object_names[obj[0]], "\ttheta = ", obj[1], "\n")
 
 def main():
     """
@@ -60,8 +61,9 @@ def main():
             result_image, found_regions = region_expander(
                 gray_image, seeds, int(args.intensity_threshold)
             )
-
-            print_object_names (identify_region(training_params, found_regions))
+            detected_figures = identify_region(training_params, found_regions)
+            draw_results_ui(detected_figures)
+            # print_object_names (detected_figures)
 
             for region in found_regions:
                 draw_region_characteristics(result_image, region)

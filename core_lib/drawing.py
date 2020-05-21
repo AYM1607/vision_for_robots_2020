@@ -12,6 +12,7 @@ from core_lib.core import Figure
 training_dataset = None
 
 
+
 def draw_diameter(image, center, angle, radius):
     """
     Draw the diameter of a circle given its center, radius and
