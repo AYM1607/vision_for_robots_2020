@@ -142,7 +142,8 @@ def region_expander(image, seed_coordinates_list, intensity_threshold):
 
     height = len(image)
     width = len(image[0])
-    region_color = (255, 255, 255)
+    # Paint each region with a different object, we have only two regions
+    region_colors = [(255, 0, 0), (0, 255, 0)]
 
     # Generate a visited list with the same dimensions as the original image.
     visited = np.full((height, width), False)
@@ -151,6 +152,7 @@ def region_expander(image, seed_coordinates_list, intensity_threshold):
     result_image = np.zeros((height, width, 3), np.uint8)
 
     found_regions = []
+    color_selector = 0
 
     for seed_coordinates in seed_coordinates_list:
         pending_points = []
@@ -165,7 +167,7 @@ def region_expander(image, seed_coordinates_list, intensity_threshold):
             current_point = pending_points.pop(0)
             current_x, current_y, _ = current_point
 
-            result_image[current_y][current_x] = region_color
+            result_image[current_y][current_x] = region_colors[color_selector]
             update_region_data(region_data, current_point)
 
             for neighbour in get_neighbours(current_point, image, visited):
@@ -174,6 +176,7 @@ def region_expander(image, seed_coordinates_list, intensity_threshold):
                 if distance <= intensity_threshold:
                     pending_points.append(neighbour)
 
+        color_selector = (color_selector + 1) % 2
         # Ignore small regions which are most likely noise.
         if region_data["00"] < 100:
             continue

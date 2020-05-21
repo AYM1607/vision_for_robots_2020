@@ -1,5 +1,6 @@
 import json
 
+
 def get_seeds_helper(
     image, lower_height_limit, upper_height_limit, data, count_to_update, COLOR_1, COLOR_2
 ):

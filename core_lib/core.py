@@ -6,3 +6,4 @@ class Figure(Enum):
     LONG_2 = 2
     COMPACT_1 = 3
     COMPACT_2 = 4
+    UNKNOWN = 5
