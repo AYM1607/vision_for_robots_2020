@@ -8,6 +8,7 @@ import numpy as np
 from core_lib.core import Figure
 
 
+
 def draw_diameter(image, center, angle, radius):
     """
     Draw the diameter of a circle given its center, radius and
