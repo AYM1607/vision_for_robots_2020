@@ -1,11 +1,7 @@
-# TODO: Read this from the configuration file.
-# Seed colors. Arranged in BGR order to match opencv.
-COLOR_1 = [0, 30, 160]
-COLOR_2 = [150, 90, 40]
-
+import json
 
 def get_seeds_helper(
-    image, lower_height_limit, upper_height_limit, data, count_to_update
+    image, lower_height_limit, upper_height_limit, data, count_to_update, COLOR_1, COLOR_2
 ):
     """
     Get the possible seeds of an image based on the 2 colors defined on the global scope.
@@ -66,6 +62,23 @@ def get_seeds(image):
         image {np.array} -- The image to traverse.
     """
 
+    # Get colors from configuration file
+    try:
+        with open('colors.json') as json_file:
+            colors = json.load(json_file)
+    except:
+        raise Exception("FAILURE: no colors.json configuration file, calibrate first")
+
+    if 'COLOR_1' in colors.keys():
+        COLOR_1 = colors['COLOR_1']
+    else:
+        raise Exception("FAILURE: configuration file is missing COLOR_1")
+
+    if 'COLOR_2' in colors.keys():
+        COLOR_2 = colors['COLOR_2']
+    else:
+        raise Exception("FAILURE: configuration file is missing COLOR_2")
+
     data = {"upper_count": 0, "lower_count": 0}
 
     middle_height = int(len(image) / 2)
@@ -86,8 +99,8 @@ def get_seeds(image):
         ):
             data["seed_2"] = (x, middle_height)
 
-    get_seeds_helper(image, 0, middle_height, data, "lower_count")
-    get_seeds_helper(image, middle_height, len(image), data, "upper_count")
+    get_seeds_helper(image, 0, middle_height, data, "lower_count", COLOR_1, COLOR_2)
+    get_seeds_helper(image, middle_height, len(image), data, "upper_count", COLOR_1, COLOR_2)
 
     result = []
 
