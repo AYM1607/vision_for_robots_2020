@@ -30,7 +30,7 @@ def main():
     cv2.namedWindow("Input")
     cv2.namedWindow("Output")
 
-    with VideoFeed(camera_index=1, width=450) as feed:
+    with VideoFeed(camera_index=0, width=450) as feed:
         while True:
             _, image = feed.read()
             gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
