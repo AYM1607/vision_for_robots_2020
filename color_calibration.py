@@ -6,7 +6,8 @@ import json
 from core_lib.video_feed import VideoFeed
 
 image = None
-new_color_samples = [[],[],[]]
+new_color_samples = [[], [], []]
+
 
 def get_neighborhood_intensity(event, x, y, flags, param):
     """
@@ -16,9 +17,17 @@ def get_neighborhood_intensity(event, x, y, flags, param):
     global new_color_samples
 
     if event == cv2.EVENT_LBUTTONDOWN:
-        coordinate_differences = [(-1, -1), (0, -1), (1, -1), 
-                                  (-1,  0), (0,  0), (1,  0),
-                                  (-1,  1), (0,  1), (1,  1)]
+        coordinate_differences = [
+            (-1, -1),
+            (0, -1),
+            (1, -1),
+            (-1, 0),
+            (0, 0),
+            (1, 0),
+            (-1, 1),
+            (0, 1),
+            (1, 1),
+        ]
         height, width, channels = image.shape
 
         for x_offset, y_offset in coordinate_differences:
@@ -27,6 +36,7 @@ def get_neighborhood_intensity(event, x, y, flags, param):
             if 0 <= new_x < width and 0 <= new_y < height:
                 for channel in range(channels):
                     new_color_samples[channel].append(image[new_y][new_x][channel])
+
 
 def average(channel_sample):
     """
@@ -39,6 +49,7 @@ def average(channel_sample):
         Int - Rounded average of all intensities.
     """
     return int(round(sum(channel_sample) / len(channel_sample)))
+
 
 def samples_available(samples):
     """
@@ -54,6 +65,7 @@ def samples_available(samples):
         if len(sample) == 0:
             return False
     return True
+
 
 def main():
     """
@@ -76,7 +88,10 @@ def main():
 
     with VideoFeed(camera_index=0, width=450) as feed:
         while True:
-            _, image = feed.read()
+            success, image = feed.read()
+
+            if not success:
+                continue
 
             cv2.imshow("Color calibration", image)
 
@@ -89,9 +104,11 @@ def main():
                     colors["COLOR_{}".format(len(colors) + 1)] = new_color
 
                     new_color = []
-                    new_color_samples = [[],[],[]]
+                    new_color_samples = [[], [], []]
                 else:
-                    print("No samples available, click image to get average color intensity of an object")
+                    print(
+                        "No samples available, click image to get average color intensity of an object"
+                    )
 
             # End the loop when "q" is pressed and export colors.
             if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -103,6 +120,7 @@ def main():
                 break
 
     cv2.destroyAllWindows()
+
 
 if __name__ == "__main__":
     main()

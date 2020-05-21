@@ -4,8 +4,12 @@ Util drawing functions.
 import math
 import cv2
 import numpy as np
+import matplotlib.cm as cm
+import matplotlib.pyplot as plt
 
 from core_lib.core import Figure
+
+training_dataset = None
 
 
 def draw_diameter(image, center, angle, radius):
@@ -86,6 +90,34 @@ def draw_filled_semicircle_from_figures(image, figures_list, center, radius):
         (255, 255, 255),
         cv2.FILLED,
     )
+
+
+def draw_training_space(training_params, found_regions):
+    global training_dataset
+
+    if not training_dataset:
+        training_dataset = []
+        for training_object in training_params:
+            x = []
+            y = []
+            for point in training_object["points"]:
+                x.append(point["phi_1"])
+                y.append(point["phi_2"])
+            training_dataset.append((x, y))
+        plt.scatter([], [])
+        plt.show(False)
+
+    colors = ["b", "g", "r", "c", "m"]
+
+    plt.cla()
+    for i, dataset in enumerate(training_dataset):
+        x, y = dataset
+        plt.scatter(x, y, color=colors[i])
+
+    for region in found_regions:
+        plt.scatter([region["phi_1"]], [region["phi_2"]], color=colors[-1])
+
+    plt.draw()
 
 
 def draw_results_ui(detected_figures):
