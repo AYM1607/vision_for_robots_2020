@@ -36,7 +36,7 @@ def main():
     result_image = cv2.medianBlur(result_image, 3)
 
     cv2.imshow("filtered", result_image)
-    result_image = dilate(result_image, 9)
+    result_image = dilate(result_image, 11)
     cv2.imshow("dilated", result_image)
 
     cv2.waitKey()
