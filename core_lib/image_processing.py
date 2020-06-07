@@ -38,6 +38,7 @@ def generate_circular_kernel(diameter):
     Returns:
         np.array
     """
+
     kernel = np.zeros((diameter, diameter), np.uint8)
 
     center = int(math.floor(diameter / 2))
@@ -62,6 +63,7 @@ def dilate(image, kernel_size=3):
     Returns:
         np.array --- the dilated image.
     """
+
     if kernel_size < 1 or kernel_size % 2 == 0:
         raise Exception("The kernel size must be odd and greater than 0")
 
