@@ -12,7 +12,6 @@ from core_lib.core import Figure
 training_dataset = None
 
 
-
 def draw_diameter(image, center, angle, radius):
     """
     Draw the diameter of a circle given its center, radius and
@@ -171,3 +170,12 @@ def draw_results_ui(detected_figures):
         draw_diameter(results_image, (150, 150), angle, 100)
 
     cv2.imshow("Results UI", results_image)
+
+
+def draw_parkin_slot(image, slot):
+    """
+    Draws a parking slot on the provided image.
+    """
+    cv2.rectangle(image, slot["corner_1"], slot["corner_2"], (0, 0, 255), 2)
+    cv2.circle(image, slot["real_center"], 2, (255, 0, 0), 4)
+    cv2.circle(image, slot["algorithm_center"], 2, (0, 255, 0), 4)
