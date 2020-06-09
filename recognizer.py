@@ -25,7 +25,7 @@ from core_lib.region_identifier import identify_region
 
 
 def read_training_params():
-    with open("train_parameters.txt") as json_file:
+    with open("core_lib/config/train_parameters.json") as json_file:
         training_params = json.load(json_file)
     return training_params
 

@@ -124,7 +124,7 @@ def main():
         points = []
 
     print(json.dumps(regions, indent=4))
-    with open('train_parameters.txt', 'w') as outfile:
+    with open('core_lib/config/train_parameters.json', 'w') as outfile:
         json.dump(regions, outfile)
 
     cv2.destroyAllWindows()

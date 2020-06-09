@@ -20,14 +20,14 @@ def identify_region(trainer_params, potential_objects):
         angle = None
         phi_1 = curr_obj["phi_1"]
         phi_2 = curr_obj["phi_2"]
-        print("phi1 = ", phi_1, "\tphi2 = ", phi_2, "\n")
+        # print("phi1 = ", phi_1, "\tphi2 = ", phi_2, "\n")
         for figure in trainer_params:
             sigma_phi_1 = figure["sigma_phi_1"]
             sigma_phi_2 = figure["sigma_phi_2"]
             mean_phi_1 = figure["mean_phi_1"]
             mean_phi_2 = figure["mean_phi_2"]
             ind_distance = get_distance(sigma_phi_1, sigma_phi_2, mean_phi_1, mean_phi_2, phi_1, phi_2)
-            print("object = ", figure["object_id"], "\tphi1 = ", mean_phi_1, "\tphi2 = ", mean_phi_2, "\tsigma_phi1 = ", sigma_phi_1, "\tsigma_phi2 = ", sigma_phi_2, "\tdist = ", ind_distance, "\n")
+            # print("object = ", figure["object_id"], "\tphi1 = ", mean_phi_1, "\tphi2 = ", mean_phi_2, "\tsigma_phi1 = ", sigma_phi_1, "\tsigma_phi2 = ", sigma_phi_2, "\tdist = ", ind_distance, "\n")
             if  in_range(mean_phi_1, mean_phi_2, phi_1, phi_2) and ind_distance < distance:
                 distance = ind_distance
                 region = Figure(int(figure["object_id"]))
