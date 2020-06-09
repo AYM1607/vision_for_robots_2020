@@ -22,6 +22,19 @@ class Direction(Enum):
     SOUTH_WEST = 8
 
 
+def read_training_params():
+
+    """
+    Gets the training params from the file.
+
+    Returns:
+        Array --- all training params.
+    """
+
+    with open(path.join(path.dirname(__file__), "config", "training_params.json")) as file:
+        return json.load(file)
+
+
 def get_config():
     """
     Gets the whole config file.
