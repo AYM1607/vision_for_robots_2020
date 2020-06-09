@@ -1,7 +1,5 @@
 import cv2
-from core_lib.core import Direction
-from core_lib.core import save_config_value
-from core_lib.core import get_config_value
+from core_lib.core import Direction, save_config_value, get_config_value
 from core_lib.parking import get_scaling_factor
 from core_lib.parking import get_final_mapped_points
 
