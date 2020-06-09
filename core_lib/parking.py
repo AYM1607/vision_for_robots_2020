@@ -17,6 +17,29 @@ from core_lib.drawing import draw_region_characteristics
 from core_lib.region_identifier import identify_region
 
 
+def get_final_mapped_points(x, y):
+    """
+    Gets final coordinates given a list of free parking spices and real coordinates
+
+    Returns:
+    parking dict --- dict with the scaled data of a parking spot
+    """
+    target = None
+    free_parking_spaces = get_config_value("free_parking_spaces")
+
+    for space in free_parking_spaces:
+        corner_1 = space["corner_1"]
+        corner_2 = space["corner_2"]
+        if (x >= corner_1[0] and x <= corner_2[0]) and (y >= corner_1[1] and y <= corner_2[1]):
+            target = space
+            x_scale, y_scale = get_scaling_factor()
+
+            for item in target:
+                target[item][0] = round(target[item][0] * x_scale)
+                target[item][1] = round(target[item][1] * y_scale)
+
+            return target
+
 def get_initial_coordinates_and_direction():
     """
     Gets initial coordinates and direction based the initial quadrant.
