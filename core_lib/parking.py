@@ -36,6 +36,53 @@ def get_final_mapped_points(x, y):
             y = int(round(space["algorithm_center"][1] * y_scale))
             return x, y
 
+
+def save_final_mapped_points(event, x, y, flags, param):
+    """
+    Click callback to map final coordinates.
+    """
+    if event == cv2.EVENT_LBUTTONDOWN:
+        coords = get_final_mapped_points(x, y)
+        if coords:
+            print("ESTACIONAMIENTO LIBRE, presione 'q' para continuar o seleccione uno nuevo")
+            print(coords)
+
+            save_config_value('initial_coordinates', coords)
+        else:
+            print("NO ES ESTACIONAMIENTO, INTENTE DE NUEVO")
+
+
+def get_final_parking_space_coordinates():
+    """
+    Routine to get final parking space coordinates given a click.
+    """
+    print("CONFIGURACION DE PUNTO DE LLEGADA")
+    print("Hacer click en el espacio libre de estacionamiento que sea el punto final.")
+    print("Presiona 'q' para finalizar.")    
+
+    input_image = cv2.imread(path.join(path.dirname(__file__), "media", "parking_base.jpg"))
+    output_image = cv2.imread(path.join(path.dirname(__file__), "media", "route_planner.jpg"))
+
+    cv2.namedWindow("input image")
+    cv2.setMouseCallback("input image", save_final_mapped_points)
+    cv2.namedWindow("output image")
+
+    while True:
+        output_image_copy = output_image.copy()
+        initial_coordinates = get_config_value('initial_coordinates')
+
+        if initial_coordinates:
+            cv2.circle(output_image_copy, tuple(initial_coordinates), 1, (0, 0, 255), 2)
+
+        cv2.imshow("input image", input_image)
+        cv2.imshow("output image", output_image_copy)
+
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
+
+    cv2.destroyAllWindows()
+
+
 def get_initial_coordinates_and_direction():
     """
     Gets initial coordinates and direction based the initial quadrant.
