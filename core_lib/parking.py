@@ -9,11 +9,34 @@ from os import path
 from core_lib.core import get_config_value
 from core_lib.core import read_training_params
 from core_lib.core import save_config_value
+from core_lib.core import Direction
 from core_lib.video_feed import VideoFeed
 from core_lib.seeds import get_seeds
 from core_lib.segmentation import region_expander
 from core_lib.drawing import draw_region_characteristics
 from core_lib.region_identifier import identify_region
+
+
+def get_initial_coordinates_and_direction():
+    """
+    Gets initial coordinates and direction based the initial quadrant.
+
+    Returns:
+    tuple --- the order is center coordinates and initial direction
+    """
+    initial_quadrant = get_config_value("initial_quadrant")
+    initial_direction = get_config_value("initial_direction")
+
+    parking_entrances = get_config_value("parking_entrances")
+
+    x_scale, y_scale = get_scaling_factor()
+
+    for entrance in parking_entrances:
+        if entrance["quadrant"] == initial_quadrant:
+            center = entrance["center_coordinates"]
+            return (center[0] * x_scale, center[1] * y_scale), initial_direction
+
+    return None
 
 
 def get_initial_quadrant_and_direction(intensity_threshold):
