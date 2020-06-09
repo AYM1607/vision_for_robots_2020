@@ -107,7 +107,7 @@ def get_initial_quadrant_and_direction(intensity_threshold):
                 if Figure.LONG_1 in figures_list:
                     new_quadrant = Direction.NORTH_WEST
                     if angle >= 0 and angle <= math.pi / 2:
-                        new_direction = Direction.EAST
+                        new_direction = Direction.SOUTH
                     else:
                         new_direction = Direction.SOUTH
                 elif Figure.LONG_2 in figures_list:
