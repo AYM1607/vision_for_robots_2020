@@ -1,7 +1,6 @@
 import cv2
 from core_lib.core import Direction, save_config_value, get_config_value
-from core_lib.parking import get_scaling_factor
-from core_lib.parking import get_final_mapped_points
+from core_lib.parking import get_scaling_factor, get_final_mapped_points
 
 def click(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDOWN:

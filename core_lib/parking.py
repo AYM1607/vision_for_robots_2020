@@ -24,21 +24,17 @@ def get_final_mapped_points(x, y):
     Returns:
     parking dict --- dict with the scaled data of a parking spot
     """
-    target = None
     free_parking_spaces = get_config_value("free_parking_spaces")
 
     for space in free_parking_spaces:
         corner_1 = space["corner_1"]
         corner_2 = space["corner_2"]
         if (x >= corner_1[0] and x <= corner_2[0]) and (y >= corner_1[1] and y <= corner_2[1]):
-            target = space
             x_scale, y_scale = get_scaling_factor()
 
-            for item in target:
-                target[item][0] = round(target[item][0] * x_scale)
-                target[item][1] = round(target[item][1] * y_scale)
-
-            return target
+            x = int(round(space["algorithm_center"][0] * x_scale))
+            y = int(round(space["algorithm_center"][1] * y_scale))
+            return x, y
 
 def get_initial_coordinates_and_direction():
     """
@@ -57,7 +53,7 @@ def get_initial_coordinates_and_direction():
     for entrance in parking_entrances:
         if entrance["quadrant"] == initial_quadrant:
             center = entrance["center_coordinates"]
-            return (center[0] * x_scale, center[1] * y_scale), initial_direction
+            return (int(round(center[0] * x_scale)), int(round(center[1] * y_scale))), initial_direction
 
     return None
 
@@ -126,9 +122,9 @@ def get_initial_quadrant_and_direction(intensity_threshold):
                 elif Figure.LONG_2 in figures_list:
                     quadrant = Direction.SOUTH_EAST
                     if angle >= 0 and angle <= math.pi / 2:
-                        new_direction = Direction.WEST
-                    else:
                         new_direction = Direction.NORTH
+                    else:
+                        new_direction = Direction.WEST
 
             if new_direction != None and new_direction != direction:
                 direction = new_direction
