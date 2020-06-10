@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
-from core import get_parking_poles_structure
+from .parking import get_parking_poles_structure
+from .core import get_config_value
+from .parking import get_initial_coordinates_and_direction
 
 
 def get_neighbours(point, image, visited):
@@ -70,3 +72,9 @@ def calculate_distances(initial_point):
 
     return poles
     
+def calculate_path():
+    intial_conditions = get_initial_coordinates_and_direction()
+    if intial_conditions:
+        x_initial, y_initial, direction = intial_conditions
+        quadrant = get_config_value("initial_quadrant")
+        
