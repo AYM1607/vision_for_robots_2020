@@ -8,6 +8,25 @@ from core import save_config_value
 from core import Direction
 
 
+def adpat_configuration(config):
+    if config == "NORTH_WEST>SOUTH":
+        return "NORTH_WEST>EAST"
+    elif config == "NORTH_WEST>EAST":
+        return "NORTH_WEST>SOUTH"
+    elif config == "NORTH_EAST>SOUTH":
+        return "NORTH_EAST>WEST"
+    elif config == "NORTH_EAST>WEST":
+        return "NORTH_EAST>SOUTH"
+    if config == "SOUTH_WEST>NORTH":
+        return "SOUTH_WEST>EAST"
+    elif config == "SOUTH_WEST>EAST":
+        return "SOUTH_WEST>NORTH"
+    elif config == "SOUTH_EAST>NORTH":
+        return "SOUTH_EAST>WEST"
+    elif config == "SOUTH_EAST>WEST":
+        return "SOUTH_EAST>NORTH"
+
+
 def get_neighbours(point, image, visited, config):
     """
     Get the valid unvisited neighbours for a given point.
@@ -40,7 +59,17 @@ def get_neighbours(point, image, visited, config):
 
     return valid_neighbours
 
+
 def block_image(image, config):
+    """
+    Fills with -1 the areas to be blocked. This is aimed to force the route 
+    to follow a specific path. Receives the original image and returns a blocked one.
+    Arguments:
+        image {np.array} -- the original image.
+        config {string | None} -- key for the virtual blocks given a coinfiguration.
+    Returns:
+        np.array
+    """
     block = get_config_value("barriers")[config]
     x_corner_1, y_corner_1 = block["corner_1"]
     x_corner_2, y_corner_2 = block["corner_2"]
@@ -85,23 +114,6 @@ def calculate_distances(initial_point, config):
 
     return poles
 
-
-# def is_point_blocked(point, config):
-#     """
-#    Defines if a point is inside a virtual block given a configuration => quadrant > direction.
-
-#     Arguments:
-#         point {tuple} -- Coordinates of a point (x, y).
-#         config {string} -- String representing the configuration.
-
-#     Returns:
-#         boolean
-#     """
-#     if config is None:
-#         return False
-#     x, y = point
-#     block_obj = get_config_value("barriers")[config]
-#     return block_obj["corner_1"][0] <= x <= block_obj["corner_2"][0] and block_obj["corner_1"][1] <= y <= block_obj["corner_2"][1]
 
 def get_next_neighbour(curr_node, distances, config, visited):
     """
@@ -155,7 +167,6 @@ def calculate_path(initial_point, distances, config, visited):
         visited[y_curr][x_curr] = True
         path.append(next_node)
     return path
-    
 
 def write_csv(mat, name):
     with open(name, 'w', newline='') as file:
@@ -165,26 +176,30 @@ def write_csv(mat, name):
 
 def build_path():
     """
-    Gets the information necessary to calculate the path and invokes the function.
+    Gets the information necessary to calculate and build the path and invokes the function.
+    Returns an array of points to be traveled.
+
+    Returns:
+        array
     """
     (x_initial, y_initial), direction = get_initial_coordinates_and_direction()
-    # print(f'x_initial = {x_initial+1}\ty_initial = {y_initial+1}')
     parking_coords = get_config_value("initial_coordinates")
-    # print(f'parking_coords =  {parking_coords}')
+
     # Build key to query for blocks coordinates
     quadrant = get_config_value("initial_quadrant")
-    config = Direction(quadrant).name + ">" + Direction(direction).name
-    # print(f'config = {config}')
+    config = adpat_configuration(Direction(quadrant).name + ">" + Direction(direction).name)
+
     # Build matrix with distances
     distances = calculate_distances(parking_coords, config)
-    write_csv(distances, "output.csv")
+    #write_csv(distances, "output.csv")
+
     # Create matrix of visited nodes.
     height = len(distances)
     width = len(distances[0])
-    # print(f'Downsampled Image Dimensions => height = {height}  twidth = {width}')
+
     visited = np.full((height, width), False)
     path = calculate_path((x_initial, y_initial), distances, config, visited)
-    return len(path)
+    return path
 
 def test():
     free_parking_spaces_scaled = get_config_value("free_parking_spaces_scaled")
@@ -192,7 +207,7 @@ def test():
     direction = get_config_value("initial_direction")
     for slot in free_parking_spaces_scaled:
         save_config_value("initial_coordinates", slot["algorithm_center"])        
-        if build_path() == 0:
+        if len(build_path()) == 0:
             print(f'Error using coordinates ({slot["algorithm_center"]})')
         else:
             print(f'Success for slot = {slot["algorithm_center"]}')
