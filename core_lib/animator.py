@@ -13,6 +13,16 @@ parking_base = Image.open('media/parking_base.jpg') # width: 328, height: 260
 car = Image.open('media/car_resized.jpg')
 
 def get_direction(origin, destination):
+    '''
+    Gets the angle between the two points.
+
+    Parameters:
+        origin {tuple} --- initial point (x,y).
+        destination {tuple} --- final point (x,y).
+
+    Returns:
+        float --- angle/degrees between the two points.
+    '''
     delta_x = destination[0] - origin[0]
     delta_y = destination[1] - origin[1]
 
@@ -24,6 +34,12 @@ def get_direction(origin, destination):
     return degrees
 
 def animator(coordinates):
+    '''
+    Animates a car trajectory in a parking lot, given a set of points.
+
+    Paremeters:
+        coordinates {list} --- a list of tuples in which each tuple represents a coordinate of the trajectory
+    '''
     global parking_base, car
 
     rescaled_coordinates = []
