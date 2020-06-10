@@ -1,6 +1,3 @@
-"""
-Upgrading this later...
-"""
 import math
 
 import cv2
