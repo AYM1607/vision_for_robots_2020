@@ -2,8 +2,9 @@ import sys
 import csv
 import numpy as np
 from parking import get_parking_poles_structure
-from core import get_config_value
 from parking import get_initial_coordinates_and_direction
+from core import get_config_value
+from core import save_config_value
 from core import Direction
 
 
@@ -31,7 +32,7 @@ def get_neighbours(point, image, visited, config):
         new_y = base_y + y_offset
 
         if 0 <= new_x < width and 0 <= new_y < height and image[new_y][new_x] > -1:
-            if visited[new_y][new_x] or is_point_blocked((new_x, new_y), config):
+            if visited[new_y][new_x]:
                 continue
             valid_neighbours.append((new_x, new_y))
             if config is None:
@@ -39,7 +40,16 @@ def get_neighbours(point, image, visited, config):
 
     return valid_neighbours
 
-def calculate_distances(initial_point):
+def block_image(image, config):
+    block = get_config_value("barriers")[config]
+    x_corner_1, y_corner_1 = block["corner_1"]
+    x_corner_2, y_corner_2 = block["corner_2"]
+    for i in range(y_corner_1, y_corner_2):
+        for j in range(x_corner_1, x_corner_2):
+            image[i][j] = -1
+    return image
+
+def calculate_distances(initial_point, config):
     """
     Returns a representation of the distances from the provided point
     to any free space in the image. If the point is an obstacle, a distance
@@ -47,12 +57,14 @@ def calculate_distances(initial_point):
 
     Arguments:
         initial_point {tuple} -- Coordinates of inital point (x, y)
+        config {string} -- Entrance configuration.
 
     Returns:
         np.array
     """
     # Get downsampled image.
     poles = get_parking_poles_structure()
+    poles = block_image(poles, config)
     # Create matrix of visited nodes.
     height = len(poles)
     width = len(poles[0])
@@ -74,22 +86,22 @@ def calculate_distances(initial_point):
     return poles
 
 
-def is_point_blocked(point, config):
-    """
-   Defines if a point is inside a virtual block given a configuration => quadrant > direction.
+# def is_point_blocked(point, config):
+#     """
+#    Defines if a point is inside a virtual block given a configuration => quadrant > direction.
 
-    Arguments:
-        point {tuple} -- Coordinates of a point (x, y).
-        config {string} -- String representing the configuration.
+#     Arguments:
+#         point {tuple} -- Coordinates of a point (x, y).
+#         config {string} -- String representing the configuration.
 
-    Returns:
-        boolean
-    """
-    if config is None:
-        return False
-    x, y = point
-    block_obj = get_config_value("barriers")[config]
-    return block_obj["corner_1"][0] <= x <= block_obj["corner_2"][0] and block_obj["corner_1"][1] <= y <= block_obj["corner_2"][1]
+#     Returns:
+#         boolean
+#     """
+#     if config is None:
+#         return False
+#     x, y = point
+#     block_obj = get_config_value("barriers")[config]
+#     return block_obj["corner_1"][0] <= x <= block_obj["corner_2"][0] and block_obj["corner_1"][1] <= y <= block_obj["corner_2"][1]
 
 def get_next_neighbour(curr_node, distances, config, visited):
     """
@@ -138,7 +150,7 @@ def calculate_path(initial_point, distances, config, visited):
         if next_node is None:
             print(f'There was an error calculating the path! :( len = {len(path)}')
             return []
-        print(f'x = {next_node[0]}\ty = {next_node[1]}')
+        # print(f'x = {next_node[0]}\ty = {next_node[1]}')
         x_curr, y_curr = next_node
         visited[y_curr][x_curr] = True
         path.append(next_node)
@@ -151,27 +163,39 @@ def write_csv(mat, name):
         for i in range(len(mat)):
             writer.writerow(mat[i])
 
-def init():
+def build_path():
     """
     Gets the information necessary to calculate the path and invokes the function.
     """
     (x_initial, y_initial), direction = get_initial_coordinates_and_direction()
-    print(f'x_initial = {x_initial}\ty_initial = {y_initial}')
+    # print(f'x_initial = {x_initial+1}\ty_initial = {y_initial+1}')
     parking_coords = get_config_value("initial_coordinates")
-    print(f'parking_coords =  {parking_coords}')
+    # print(f'parking_coords =  {parking_coords}')
     # Build key to query for blocks coordinates
     quadrant = get_config_value("initial_quadrant")
     config = Direction(quadrant).name + ">" + Direction(direction).name
-    print(f'config = {config}')
+    # print(f'config = {config}')
     # Build matrix with distances
-    distances = calculate_distances(parking_coords)
-    #write_csv(distances, "output.csv")
+    distances = calculate_distances(parking_coords, config)
+    write_csv(distances, "output.csv")
     # Create matrix of visited nodes.
     height = len(distances)
     width = len(distances[0])
-    print(f'Downsampled Image Dimensions => height = {height}  twidth = {width}')
+    # print(f'Downsampled Image Dimensions => height = {height}  twidth = {width}')
     visited = np.full((height, width), False)
     path = calculate_path((x_initial, y_initial), distances, config, visited)
-    print(f'pathLen = {len(path)}')
-    
-init()
+    return len(path)
+
+def test():
+    free_parking_spaces_scaled = get_config_value("free_parking_spaces_scaled")
+    quadrant = get_config_value("initial_quadrant")
+    direction = get_config_value("initial_direction")
+    for slot in free_parking_spaces_scaled:
+        save_config_value("initial_coordinates", slot["algorithm_center"])        
+        if build_path() == 0:
+            print(f'Error using coordinates ({slot["algorithm_center"]})')
+        else:
+            print(f'Success for slot = {slot["algorithm_center"]}')
+    print(f'Success for quadrant = {Direction(quadrant).name}  direction = {Direction(direction).name}')
+
+test()
