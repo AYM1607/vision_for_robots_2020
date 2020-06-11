@@ -43,7 +43,7 @@ def animator(coordinates):
 
     # invert scaled values
     for point in coordinates:
-        rescaled_coordinates.append((point[0]/get_config_value('x_scale'), point[1]/get_config_value('y_scale')))
+        rescaled_coordinates.append((int(point[0]/get_config_value('x_scale')), int(point[1]/get_config_value('y_scale'))))
 
     # initial car position 
     current_direction = get_direction(rescaled_coordinates[0],rescaled_coordinates[1])
@@ -59,8 +59,8 @@ def animator(coordinates):
         back_im.paste(car, rescaled_coordinates[i])
         opencv_image = cv2.cvtColor(numpy.array(back_im), cv2.COLOR_RGB2BGR)
 
-        cv2.imshow('image_results', opencv_image)
+        cv2.imshow('car_trajectory', opencv_image)
 
-        cv2.waitKey(500)
+        cv2.waitKey(100)
 
     cv2.destroyAllWindows()
