@@ -6,15 +6,15 @@ import statistics
 
 
 from os import path
-from core_lib.core import get_config_value
-from core_lib.core import read_training_params
-from core_lib.core import save_config_value
-from core_lib.core import Direction
-from core_lib.video_feed import VideoFeed
-from core_lib.seeds import get_seeds
-from core_lib.segmentation import region_expander
-from core_lib.drawing import draw_region_characteristics
-from core_lib.region_identifier import identify_region
+from core import get_config_value
+from core import read_training_params
+from core import save_config_value
+from core import Direction
+from video_feed import VideoFeed
+from seeds import get_seeds
+from segmentation import region_expander
+from drawing import draw_region_characteristics
+from region_identifier import identify_region
 
 
 def get_final_mapped_points(x, y):

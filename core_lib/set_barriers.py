@@ -18,7 +18,11 @@ keys = [
     Direction.SOUTH_WEST.name + ">" + Direction.NORTH.name,
     Direction.SOUTH_WEST.name + ">" + Direction.EAST.name,
     Direction.SOUTH_EAST.name + ">" + Direction.NORTH.name,
-    Direction.SOUTH_EAST.name + ">" + Direction.WEST.name
+    Direction.SOUTH_EAST.name + ">" + Direction.WEST.name,
+    "p1",
+    "p2",
+    "p3",
+    "p4"
 ]
 
 # Blocks are represented as a rectangle.

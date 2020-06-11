@@ -6,6 +6,20 @@ from parking import get_initial_coordinates_and_direction
 from core import get_config_value
 from core import save_config_value
 from core import Direction
+from drawing import draw_path
+
+def parking_slot_matcher(point):
+    if point[0] == 77:
+        if point[1] == 45:
+            return "p1"
+        else:
+            return "p3"
+    elif point[0] == 86:
+        if point[1] == 45:
+            return "p2"
+        else:
+            return "p4"
+    return None
 
 
 def adpat_configuration(config):
@@ -60,7 +74,7 @@ def get_neighbours(point, image, visited, config):
     return valid_neighbours
 
 
-def block_image(image, config):
+def block_image(image, config, slot_coords):
     """
     Fills with -1 the areas to be blocked. This is aimed to force the route 
     to follow a specific path. Receives the original image and returns a blocked one.
@@ -70,12 +84,18 @@ def block_image(image, config):
     Returns:
         np.array
     """
-    block = get_config_value("barriers")[config]
-    x_corner_1, y_corner_1 = block["corner_1"]
-    x_corner_2, y_corner_2 = block["corner_2"]
-    for i in range(y_corner_1, y_corner_2):
-        for j in range(x_corner_1, x_corner_2):
-            image[i][j] = -1
+    barriers = [config, "p1", "p2", "p3", "p4"]
+    special_slot = parking_slot_matcher(slot_coords)
+    if special_slot is not None:
+        barriers.remove(special_slot)
+    for barrier in barriers:
+        block = get_config_value("barriers")[barrier]
+        x_corner_1, y_corner_1 = block["corner_1"]
+        x_corner_2, y_corner_2 = block["corner_2"]
+        for i in range(y_corner_1, y_corner_2):
+            for j in range(x_corner_1, x_corner_2):
+                image[i][j] = -1
+
     return image
 
 def calculate_distances(initial_point, config):
@@ -93,7 +113,7 @@ def calculate_distances(initial_point, config):
     """
     # Get downsampled image.
     poles = get_parking_poles_structure()
-    poles = block_image(poles, config)
+    poles = block_image(poles, config, initial_point)
     # Create matrix of visited nodes.
     height = len(poles)
     width = len(poles[0])
@@ -191,7 +211,6 @@ def build_path():
 
     # Build matrix with distances
     distances = calculate_distances(parking_coords, config)
-    #write_csv(distances, "output.csv")
 
     # Create matrix of visited nodes.
     height = len(distances)
@@ -199,18 +218,57 @@ def build_path():
 
     visited = np.full((height, width), False)
     path = calculate_path((x_initial, y_initial), distances, config, visited)
+    write_csv(path, "output.csv")
+    draw_path(path)
     return path
 
 def test():
-    free_parking_spaces_scaled = get_config_value("free_parking_spaces_scaled")
-    quadrant = get_config_value("initial_quadrant")
-    direction = get_config_value("initial_direction")
-    for slot in free_parking_spaces_scaled:
-        save_config_value("initial_coordinates", slot["algorithm_center"])        
-        if len(build_path()) == 0:
-            print(f'Error using coordinates ({slot["algorithm_center"]})')
-        else:
-            print(f'Success for slot = {slot["algorithm_center"]}')
-    print(f'Success for quadrant = {Direction(quadrant).name}  direction = {Direction(direction).name}')
+    possible_confs = [
+        {
+            "quadrant": 5,
+            "direction": 2
+        },
+        {
+            "quadrant": 5,
+            "direction": 4
+        },
+        {
+            "quadrant": 6,
+            "direction": 2
+        },
+        {
+            "quadrant": 6,
+            "direction": 3
+        },
+        {
+            "quadrant": 7,
+            "direction": 1
+        },
+        {
+            "quadrant": 7,
+            "direction": 4
+        },
+        {
+            "quadrant": 8,
+            "direction": 1
+        },
+        {
+            "quadrant": 8,
+            "direction": 3
+        }
+    ]
+    for conf in possible_confs:
+        save_config_value("initial_quadrant", conf["quadrant"])
+        save_config_value("initial_direction", conf["direction"])
+        free_parking_spaces_scaled = get_config_value("free_parking_spaces_scaled")
+        quadrant = get_config_value("initial_quadrant")
+        direction = get_config_value("initial_direction")
+        for slot in free_parking_spaces_scaled:
+            save_config_value("initial_coordinates", slot["algorithm_center"])        
+            if len(build_path()) == 0:
+                print(f'Error using coordinates ({slot["algorithm_center"]})')
+            else:
+                print(f'Success for slot = {slot["algorithm_center"]}')
+            print(f'Success for quadrant = {Direction(quadrant).name}  direction = {Direction(direction).name}')
 
-test()
+build_path()

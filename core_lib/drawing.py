@@ -7,7 +7,8 @@ import numpy as np
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 
-from core_lib.core import Figure
+from core import Figure
+from core import get_config_value
 
 training_dataset = None
 
@@ -28,6 +29,28 @@ def draw_diameter(image, center, angle, radius):
     y_2 = int(y_center + (radius * math.sin(angle)))
 
     cv2.line(image, (x_1, y_1), (x_2, y_2), (0, 255, 0), 2)
+
+def get_scaling_factor():
+    """
+    Indicates by how much the parking poles structure was
+    scaled with respect to the original image.
+
+    Returns:
+        tuple --- the order is x_scale then y_scale
+    """
+
+    return get_config_value("x_scale"), get_config_value("y_scale")
+
+def draw_path(path):
+    base_image = cv2.imread("./media/parking_base.jpg")
+    x_scale, y_scale = get_scaling_factor()
+    for i in range(len(path) - 1):
+        x_1 = int(round(path[i][0] / x_scale))
+        x_2 = int(round(path[i+1][0] / x_scale))
+        y_1 = int(round(path[i][1] / y_scale))
+        y_2 = int(round(path[i+1][1] / y_scale))
+        cv2.line(base_image, (x_1, y_1), (x_2, y_2), (0, 255, 0), 2)
+    cv2.imwrite("./media/output_image.jpg", base_image)
 
 
 def draw_region_characteristics(image, characteristics):
