@@ -42,10 +42,11 @@ def animator(coordinates):
     rescaled_coordinates = []
     x_scale = get_config_value('x_scale')
     y_scale = get_config_value('y_scale')
+    offset = (5,11) # car size is (10,24)
 
-    # invert scaled values
+    # invert scaled values and place pixel at car's center
     for point in coordinates:
-        rescaled_coordinates.append((int(point[0]/x_scale), int(point[1]/y_scale)))
+        rescaled_coordinates.append((int(point[0]/x_scale)-offset[0], int(point[1]/y_scale)-offset[1]))
 
     # initial car position 
     current_direction = get_direction(rescaled_coordinates[0],rescaled_coordinates[1])
