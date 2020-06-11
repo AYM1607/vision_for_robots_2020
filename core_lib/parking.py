@@ -73,23 +73,14 @@ def get_final_parking_space_coordinates():
     input_image = cv2.imread(
         path.join(path.dirname(__file__), "media", "parking_base.jpg")
     )
-    output_image = cv2.imread(
-        path.join(path.dirname(__file__), "media", "route_planner.jpg")
-    )
 
     cv2.namedWindow("input image")
     cv2.setMouseCallback("input image", save_final_mapped_points)
-    cv2.namedWindow("output image")
 
     while True:
-        output_image_copy = output_image.copy()
         initial_coordinates = get_config_value("initial_coordinates")
 
-        if initial_coordinates:
-            cv2.circle(output_image_copy, tuple(initial_coordinates), 1, (0, 0, 255), 2)
-
         cv2.imshow("input image", input_image)
-        cv2.imshow("output image", output_image_copy)
 
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break

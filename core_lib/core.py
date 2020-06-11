@@ -1,3 +1,4 @@
+import cv2
 import json
 from enum import Enum
 from os import path, system, name as os_name

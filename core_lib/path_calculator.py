@@ -2,6 +2,7 @@ import sys
 import csv
 import numpy as np
 from core_lib.parking import (
+    get_available_spots_regions,
     get_parking_poles_structure,
     get_initial_coordinates_and_direction,
 )
@@ -224,6 +225,9 @@ def build_path():
 
     visited = np.full((height, width), False)
     path = calculate_path((x_initial, y_initial), distances, config, visited)
+    if path[-1] == (41, 73):
+        for i in range(40, 31, -1):
+            path.append((i, 73))
     write_csv(path, "output.csv")
     draw_path(path)
     return path
