@@ -1,12 +1,13 @@
 import sys
 import csv
 import numpy as np
-from parking import get_parking_poles_structure
-from parking import get_initial_coordinates_and_direction
-from core import get_config_value
-from core import save_config_value
-from core import Direction
-from drawing import draw_path
+from core_lib.parking import (
+    get_parking_poles_structure,
+    get_initial_coordinates_and_direction,
+)
+from core_lib.core import get_config_value, save_config_value, Direction
+from core_lib.drawing import draw_path
+
 
 def parking_slot_matcher(point):
     if point[0] == 77:
@@ -98,6 +99,7 @@ def block_image(image, config, slot_coords):
 
     return image
 
+
 def calculate_distances(initial_point, config):
     """
     Returns a representation of the distances from the provided point
@@ -180,7 +182,7 @@ def calculate_path(initial_point, distances, config, visited):
     while distances[y_curr][x_curr] > 0:
         next_node = get_next_neighbour((x_curr, y_curr), distances, config, visited)
         if next_node is None:
-            print(f'There was an error calculating the path! :( len = {len(path)}')
+            print(f"There was an error calculating the path! :( len = {len(path)}")
             return []
         # print(f'x = {next_node[0]}\ty = {next_node[1]}')
         x_curr, y_curr = next_node
@@ -188,11 +190,13 @@ def calculate_path(initial_point, distances, config, visited):
         path.append(next_node)
     return path
 
+
 def write_csv(mat, name):
-    with open(name, 'w', newline='') as file:
+    with open(name, "w", newline="") as file:
         writer = csv.writer(file)
         for i in range(len(mat)):
             writer.writerow(mat[i])
+
 
 def build_path():
     """
@@ -207,7 +211,9 @@ def build_path():
 
     # Build key to query for blocks coordinates
     quadrant = get_config_value("initial_quadrant")
-    config = adpat_configuration(Direction(quadrant).name + ">" + Direction(direction).name)
+    config = adpat_configuration(
+        Direction(quadrant).name + ">" + Direction(direction).name
+    )
 
     # Build matrix with distances
     distances = calculate_distances(parking_coords, config)
@@ -222,40 +228,17 @@ def build_path():
     draw_path(path)
     return path
 
+
 def test():
     possible_confs = [
-        {
-            "quadrant": 5,
-            "direction": 2
-        },
-        {
-            "quadrant": 5,
-            "direction": 4
-        },
-        {
-            "quadrant": 6,
-            "direction": 2
-        },
-        {
-            "quadrant": 6,
-            "direction": 3
-        },
-        {
-            "quadrant": 7,
-            "direction": 1
-        },
-        {
-            "quadrant": 7,
-            "direction": 4
-        },
-        {
-            "quadrant": 8,
-            "direction": 1
-        },
-        {
-            "quadrant": 8,
-            "direction": 3
-        }
+        {"quadrant": 5, "direction": 2},
+        {"quadrant": 5, "direction": 4},
+        {"quadrant": 6, "direction": 2},
+        {"quadrant": 6, "direction": 3},
+        {"quadrant": 7, "direction": 1},
+        {"quadrant": 7, "direction": 4},
+        {"quadrant": 8, "direction": 1},
+        {"quadrant": 8, "direction": 3},
     ]
     for conf in possible_confs:
         save_config_value("initial_quadrant", conf["quadrant"])
@@ -264,11 +247,11 @@ def test():
         quadrant = get_config_value("initial_quadrant")
         direction = get_config_value("initial_direction")
         for slot in free_parking_spaces_scaled:
-            save_config_value("initial_coordinates", slot["algorithm_center"])        
+            save_config_value("initial_coordinates", slot["algorithm_center"])
             if len(build_path()) == 0:
                 print(f'Error using coordinates ({slot["algorithm_center"]})')
             else:
                 print(f'Success for slot = {slot["algorithm_center"]}')
-            print(f'Success for quadrant = {Direction(quadrant).name}  direction = {Direction(direction).name}')
-
-build_path()
+            print(
+                f"Success for quadrant = {Direction(quadrant).name}  direction = {Direction(direction).name}"
+            )
