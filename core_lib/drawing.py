@@ -148,17 +148,34 @@ def draw_results_ui(detected_figures):
     cv2.line(results_image, (150, 50), (150, 250), (255, 255, 255), 2)
     cv2.line(results_image, (50, 150), (250, 150), (255, 255, 255), 2)
 
+    for i, char in enumerate("martillo"):
+        cv2.putText(
+            results_image,
+            char,
+            (5, 75 + (i * 27)),
+            cv2.FONT_HERSHEY_COMPLEX,
+            1,
+            (255, 255, 255),
+        )
+    for i, char in enumerate("llave"):
+        cv2.putText(
+            results_image,
+            char,
+            (270, 110 + (i * 27)),
+            cv2.FONT_HERSHEY_COMPLEX,
+            1,
+            (255, 255, 255),
+        )
     cv2.putText(
-        results_image, "L1", (5, 160), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255)
+        results_image,
+        "tuerca",
+        (100, 30),
+        cv2.FONT_HERSHEY_COMPLEX,
+        1,
+        (255, 255, 255),
     )
     cv2.putText(
-        results_image, "L2", (260, 160), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255)
-    )
-    cv2.putText(
-        results_image, "C1", (130, 30), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255)
-    )
-    cv2.putText(
-        results_image, "C2", (130, 284), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255)
+        results_image, "cinta", (110, 284), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255)
     )
 
     draw_filled_semicircle_from_figures(
