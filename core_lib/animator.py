@@ -40,10 +40,12 @@ def animator(coordinates):
     global parking_base, car
 
     rescaled_coordinates = []
+    x_scale = get_config_value('x_scale')
+    y_scale = get_config_value('y_scale')
 
     # invert scaled values
     for point in coordinates:
-        rescaled_coordinates.append((int(point[0]/get_config_value('x_scale')), int(point[1]/get_config_value('y_scale'))))
+        rescaled_coordinates.append((int(point[0]/x_scale), int(point[1]/y_scale)))
 
     # initial car position 
     current_direction = get_direction(rescaled_coordinates[0],rescaled_coordinates[1])
