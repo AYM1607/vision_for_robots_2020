@@ -1,6 +1,6 @@
 import math
 import json
-from .core import Figure
+from core import Figure
 
 threshold = 0.7
 
