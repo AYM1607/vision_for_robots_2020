@@ -6,15 +6,19 @@ import statistics
 
 
 from os import path
-from core_lib.core import get_config_value
-from core_lib.core import read_training_params
-from core_lib.core import save_config_value
-from core_lib.core import Direction
+from core_lib.core import (
+    get_config_value,
+    read_training_params,
+    save_config_value,
+    Direction,
+    Figure,
+    clear_terminal,
+)
 from core_lib.video_feed import VideoFeed
 from core_lib.seeds import get_seeds
 from core_lib.segmentation import region_expander
-from core_lib.drawing import draw_region_characteristics
 from core_lib.region_identifier import identify_region
+from core_lib.drawing import draw_results_ui
 
 
 def get_final_mapped_points(x, y):
@@ -29,7 +33,9 @@ def get_final_mapped_points(x, y):
     for space in free_parking_spaces:
         corner_1 = space["corner_1"]
         corner_2 = space["corner_2"]
-        if (x >= corner_1[0] and x <= corner_2[0]) and (y >= corner_1[1] and y <= corner_2[1]):
+        if (x >= corner_1[0] and x <= corner_2[0]) and (
+            y >= corner_1[1] and y <= corner_2[1]
+        ):
             x_scale, y_scale = get_scaling_factor()
 
             x = int(round(space["algorithm_center"][0] * x_scale))
@@ -44,11 +50,15 @@ def save_final_mapped_points(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDOWN:
         coords = get_final_mapped_points(x, y)
         if coords:
-            print("ESTACIONAMIENTO LIBRE, presione 'q' para continuar o seleccione uno nuevo")
+            clear_terminal()
+            print(
+                "ESTACIONAMIENTO LIBRE, presione 'q' para continuar o seleccione uno nuevo"
+            )
             print(coords)
 
-            save_config_value('initial_coordinates', coords)
+            save_config_value("initial_coordinates", coords)
         else:
+            clear_terminal()
             print("NO ES ESTACIONAMIENTO, INTENTE DE NUEVO")
 
 
@@ -58,29 +68,25 @@ def get_final_parking_space_coordinates():
     """
     print("CONFIGURACION DE PUNTO DE LLEGADA")
     print("Hacer click en el espacio libre de estacionamiento que sea el punto final.")
-    print("Presiona 'q' para finalizar.")    
+    print("Presiona 'q' para finalizar.")
 
-    input_image = cv2.imread(path.join(path.dirname(__file__), "media", "parking_base.jpg"))
-    output_image = cv2.imread(path.join(path.dirname(__file__), "media", "route_planner.jpg"))
+    input_image = cv2.imread(
+        path.join(path.dirname(__file__), "media", "parking_base.jpg")
+    )
 
     cv2.namedWindow("input image")
     cv2.setMouseCallback("input image", save_final_mapped_points)
-    cv2.namedWindow("output image")
 
     while True:
-        output_image_copy = output_image.copy()
-        initial_coordinates = get_config_value('initial_coordinates')
-
-        if initial_coordinates:
-            cv2.circle(output_image_copy, tuple(initial_coordinates), 1, (0, 0, 255), 2)
+        initial_coordinates = get_config_value("initial_coordinates")
 
         cv2.imshow("input image", input_image)
-        cv2.imshow("output image", output_image_copy)
 
         if cv2.waitKey(1) & 0xFF == ord("q"):
-                break
+            break
 
     cv2.destroyAllWindows()
+    return get_config_value("initial_coordinates")
 
 
 def get_initial_coordinates_and_direction():
@@ -100,21 +106,22 @@ def get_initial_coordinates_and_direction():
     for entrance in parking_entrances:
         if entrance["quadrant"] == initial_quadrant:
             center = entrance["center_coordinates"]
-            return (int(round(center[0] * x_scale)), int(round(center[1] * y_scale))), initial_direction
+            return (
+                (int(round(center[0] * x_scale)), int(round(center[1] * y_scale))),
+                initial_direction,
+            )
 
     return None
 
 
-def get_initial_quadrant_and_direction(intensity_threshold):
+def get_initial_quadrant_and_direction(intensity_threshold=35):
     """
     Gets initial quadrant and direction based on the rules of the project.
     TODO(eskr): Esplain rules
     """
 
-
     # Create 2 named windows for the input and output image.
     cv2.namedWindow("Input")
-    cv2.namedWindow("Output")
 
     training_params = read_training_params()
 
@@ -131,11 +138,10 @@ def get_initial_quadrant_and_direction(intensity_threshold):
             gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             seeds = get_seeds(image)
 
-            result_image, found_regions = region_expander(
-                gray_image, seeds, intensity_threshold
-            )
+            _, found_regions = region_expander(gray_image, seeds, intensity_threshold)
             detected_figures = identify_region(training_params, found_regions)
-  
+            draw_results_ui(detected_figures)
+
             figures_list = []
             new_quadrant = None
             new_direction = None
@@ -144,42 +150,54 @@ def get_initial_quadrant_and_direction(intensity_threshold):
             for figure, figure_angle in detected_figures:
                 figures_list.append(figure)
                 if figure_angle:
-                    angle = abs(figure_angle)
+                    angle = figure_angle
 
             if Figure.COMPACT_1 in figures_list:
                 if Figure.LONG_1 in figures_list:
                     new_quadrant = Direction.NORTH_WEST
-                    if angle >= 0 and angle <= math.pi / 2:
-                        new_direction = Direction.SOUTH
-                    else:
+                    if (0 <= angle <= math.pi / 2) or (
+                        -math.pi <= angle <= -math.pi / 2
+                    ):
                         new_direction = Direction.EAST
-                elif Figure.LONG_2 in figures_list:
-                    quadrant = Direction.NORTH_EAST
-                    if angle >= 0 and angle <= math.pi / 2:
-                        new_direction = Direction.WEST
                     else:
                         new_direction = Direction.SOUTH
+                elif Figure.LONG_2 in figures_list:
+                    new_quadrant = Direction.NORTH_EAST
+                    if (0 <= angle <= math.pi / 2) or (
+                        -math.pi <= angle <= -math.pi / 2
+                    ):
+                        new_direction = Direction.SOUTH
+                    else:
+                        new_direction = Direction.WEST
             elif Figure.COMPACT_2 in figures_list:
                 if Figure.LONG_1 in figures_list:
-                    quadrant = Direction.SOUTH_WEST
-                    if angle >= 0 and angle <= math.pi / 2:
+                    new_quadrant = Direction.SOUTH_WEST
+                    if (0 <= angle <= math.pi / 2) or (
+                        -math.pi <= angle <= -math.pi / 2
+                    ):
+                        new_direction = Direction.NORTH
+                    else:
                         new_direction = Direction.EAST
-                    else:
-                        new_direction = Direction.NORTH
                 elif Figure.LONG_2 in figures_list:
-                    quadrant = Direction.SOUTH_EAST
-                    if angle >= 0 and angle <= math.pi / 2:
-                        new_direction = Direction.NORTH
-                    else:
+                    new_quadrant = Direction.SOUTH_EAST
+                    if (0 <= angle <= math.pi / 2) or (
+                        -math.pi <= angle <= -math.pi / 2
+                    ):
                         new_direction = Direction.WEST
+                    else:
+                        new_direction = Direction.NORTH
 
-            if new_direction != None and new_direction != direction:
+            if new_direction not in (None, direction):
                 direction = new_direction
-                print("Nueva direccion inicial: ", new_direction.name)
+                clear_terminal()
+                print("Cuadrante inicial: ", new_quadrant.name)
+                print("Direccion inicial: ", new_direction.name)
 
-            if new_quadrant != None and new_quadrant != quadrant:
+            if new_quadrant not in (None, quadrant):
                 quadrant = new_quadrant
-                print("Nuevo cuadrante inicial: ", new_quadrant.name)
+                clear_terminal()
+                print("Cuadrante inicial: ", new_quadrant.name)
+                print("Direccion inicial: ", new_direction.name)
 
             # for region in found_regions:
             #     draw_region_characteristics(result_image, region)
@@ -196,10 +214,11 @@ def get_initial_quadrant_and_direction(intensity_threshold):
     print("Quadrante: ", quadrant.name)
     print("Direccion: ", direction.name)
 
-    save_config_value('initial_quadrant', quadrant.value)
-    save_config_value('initial_direction', direction.value)
+    save_config_value("initial_quadrant", quadrant.value)
+    save_config_value("initial_direction", direction.value)
 
     return quadrant, direction
+
 
 def get_parking_poles_structure():
     """

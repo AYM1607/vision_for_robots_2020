@@ -7,12 +7,15 @@ import cv2
 import json
 import statistics
 
+from core_lib.core import read_training_params
 from core_lib.video_feed import VideoFeed
 from core_lib.seeds import get_seeds
 from core_lib.segmentation import region_expander
-from core_lib.drawing import draw_region_characteristics
-from core_lib.drawing import draw_results_ui
-from core_lib.drawing import draw_training_space
+from core_lib.drawing import (
+    draw_region_characteristics,
+    draw_results_ui,
+    draw_training_space,
+)
 from core_lib.region_identifier import identify_region
 
 # object_names = {
@@ -22,12 +25,6 @@ from core_lib.region_identifier import identify_region
 #     "4": "cinta",
 #     "5": "UNKNOWN"
 # }
-
-
-def read_training_params():
-    with open("core_lib/config/train_parameters.json") as json_file:
-        training_params = json.load(json_file)
-    return training_params
 
 
 # def print_object_names(objects):
@@ -45,7 +42,7 @@ def main():
     parser.add_argument(
         "-i",
         "--intensity-threshold",
-        default=30,
+        default=35,
         help="The maximum distance for 2 pixels to be considered in the same region",
     )
     args = parser.parse_args()

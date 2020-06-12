@@ -1,6 +1,7 @@
+import cv2
 import json
 from enum import Enum
-from os import path
+from os import path, system, name as os_name
 
 
 class Figure(Enum):
@@ -22,6 +23,13 @@ class Direction(Enum):
     SOUTH_WEST = 8
 
 
+def clear_terminal():
+    """
+    Clears all the text on the terminal.
+    """
+    system("cls" if os_name == "nt" else "clear")
+
+
 def read_training_params():
 
     """
@@ -31,7 +39,9 @@ def read_training_params():
         Array --- all training params.
     """
 
-    with open(path.join(path.dirname(__file__), "config", "training_params.json")) as file:
+    with open(
+        path.join(path.dirname(__file__), "config", "training_params.json")
+    ) as file:
         return json.load(file)
 
 

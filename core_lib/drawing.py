@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 
-from core_lib.core import Figure
+from core_lib.core import Figure, get_config_value
 
 training_dataset = None
 
@@ -28,6 +28,30 @@ def draw_diameter(image, center, angle, radius):
     y_2 = int(y_center + (radius * math.sin(angle)))
 
     cv2.line(image, (x_1, y_1), (x_2, y_2), (0, 255, 0), 2)
+
+
+def get_scaling_factor():
+    """
+    Indicates by how much the parking poles structure was
+    scaled with respect to the original image.
+
+    Returns:
+        tuple --- the order is x_scale then y_scale
+    """
+
+    return get_config_value("x_scale"), get_config_value("y_scale")
+
+
+def draw_path(path):
+    base_image = cv2.imread("core_lib/media/parking_base.jpg")
+    x_scale, y_scale = get_scaling_factor()
+    for i in range(len(path) - 1):
+        x_1 = int(round(path[i][0] / x_scale))
+        x_2 = int(round(path[i + 1][0] / x_scale))
+        y_1 = int(round(path[i][1] / y_scale))
+        y_2 = int(round(path[i + 1][1] / y_scale))
+        cv2.line(base_image, (x_1, y_1), (x_2, y_2), (0, 255, 0), 2)
+    cv2.imwrite("core_lib/media/output_image.jpg", base_image)
 
 
 def draw_region_characteristics(image, characteristics):
@@ -148,17 +172,34 @@ def draw_results_ui(detected_figures):
     cv2.line(results_image, (150, 50), (150, 250), (255, 255, 255), 2)
     cv2.line(results_image, (50, 150), (250, 150), (255, 255, 255), 2)
 
+    for i, char in enumerate("martillo"):
+        cv2.putText(
+            results_image,
+            char,
+            (5, 75 + (i * 27)),
+            cv2.FONT_HERSHEY_COMPLEX,
+            1,
+            (255, 255, 255),
+        )
+    for i, char in enumerate("llave"):
+        cv2.putText(
+            results_image,
+            char,
+            (270, 110 + (i * 27)),
+            cv2.FONT_HERSHEY_COMPLEX,
+            1,
+            (255, 255, 255),
+        )
     cv2.putText(
-        results_image, "L1", (5, 160), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255)
+        results_image,
+        "tuerca",
+        (100, 30),
+        cv2.FONT_HERSHEY_COMPLEX,
+        1,
+        (255, 255, 255),
     )
     cv2.putText(
-        results_image, "L2", (260, 160), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255)
-    )
-    cv2.putText(
-        results_image, "C1", (130, 30), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255)
-    )
-    cv2.putText(
-        results_image, "C2", (130, 284), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255)
+        results_image, "cinta", (110, 284), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255)
     )
 
     draw_filled_semicircle_from_figures(
